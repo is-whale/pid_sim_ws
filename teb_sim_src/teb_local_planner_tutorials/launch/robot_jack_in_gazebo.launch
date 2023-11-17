@@ -1,0 +1,56 @@
+<!-- 
+  Simulate a carlike robot with the teb_local_planner in stage:
+  - stage
+  - map_server
+  - move_base
+  - static map
+  - amcl
+  - rviz view
+ -->
+<launch>
+
+        <!--  ************** Global Parameters ***************  -->
+        <param name="/use_sim_time" value="true"/>
+
+        <!--  ************** Gazebo Simulator ***************  -->
+		<!-- <include file="$(find jackal_tutorials)/launch/jack.launch"/> -->
+		<!-- <include file="$(find pedsim_simulator)/launch/robot_jackal.launch"/> -->
+		<arg name="map_name" default="$(find bringup)/map/Scenarios_5.yaml" />
+		<arg name="rviz" default="false"/>
+        <group if="$(arg rviz)">
+            <node name="rviz" pkg="rviz" type="rviz"
+          args="-d $(find bringup)/rviz/racecar_urdf.rviz" required="true"/>
+        </group>
+		<!-- <node name="gazebo_odometry" pkg="racecar_description" type="gazebo_odometry.py"/> -->
+        <!--  ************** Navigation ***************  -->
+	<node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+  	  	<rosparam file="$(find teb_local_planner_tutorials)/cfg/carlike/costmap_common_params.yaml" command="load" ns="global_costmap" />
+  	 	<rosparam file="$(find teb_local_planner_tutorials)/cfg/carlike/costmap_common_params.yaml" command="load" ns="local_costmap" />
+  		<rosparam file="$(find teb_local_planner_tutorials)/cfg/carlike/local_costmap_params.yaml" command="load" />
+  		<rosparam file="$(find teb_local_planner_tutorials)/cfg/carlike/global_costmap_params.yaml" command="load" />
+  		<!-- <rosparam file="$(find teb_local_planner_tutorials)/cfg/carlike/teb_local_planner_params.yaml" command="load" /> -->
+
+		<param name="base_global_planner" value="global_planner/GlobalPlanner" />
+		<param name="planner_frequency" value="1.0" />
+		<param name="planner_patience" value="5.0" />
+
+		<param name="base_local_planner" value="RL_local_planner/RL4LPlanner" />
+		<!-- <param name="base_local_planner" value="teb_local_planner/TebLocalPlannerROS" /> -->
+		<param name="controller_frequency" value="50.0" />
+		<param name="controller_patience" value="45.0" />
+
+        <param name="clearing_rotation_allowed" value="false" /> <!-- Our carlike robot is not able to rotate in place -->
+		<remap from="odom" to="odometry/filtered" />
+	</node>
+
+	<!--  ****** Maps *****  -->
+	<!-- <node name="map_server" pkg="map_server" type="map_server" args="$(find bringup)/map/Scenarios_1.1.yaml" output="screen">
+                <param name="frame_id" value="map"/>
+    </node> -->
+
+	<include file="$(find jackal_navigation)/launch/amcl_demo.launch">
+		<arg name="map_name" value="$(arg map_name)" /> 
+	</include>
+	<include file="$(find laser_scan_to_map)/launch/laser_scan_to_map.launch"/>
+	<include file="$(find real_env_bridge)/launch/real_env_bridge.launch"/>
+</launch>

@@ -1,0 +1,5 @@
+<launch>
+    <include file="$(find bringup)/launch/gazebo/racecar_gazebo_rviz.launch"/>
+    <include file="$(find bringup)/launch/slam_gmapping.launch"/>
+    <node name="gazebo_keyboard_teleop" pkg="racecar_description" type="keyboard_teleop.py"/>
+</launch>

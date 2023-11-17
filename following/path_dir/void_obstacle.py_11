@@ -1,0 +1,73 @@
+#!/usr/bin/python3
+# -*- coding: utf-8 -*-
+import sys,os
+import time,datetime
+import rospy
+import numpy as np
+from sensor_msgs.msg import LaserScan
+from geometry_msgs.msg import Twist
+
+
+class Obstacle():
+    def __init__(self):
+        self.lidar_detect_distance = 0.8   #避障距离为0.8m
+        self.scan_front_filter = 0.3    #过滤掉0.2m内的前向点云数据
+        self.scan_edge_filter = 0.5     #过滤掉0.5m内的侧向点云数据
+
+        sub = rospy.Subscriber('/scan',LaserScan,self.getScan,queue_size=10)
+        rospy.spin()
+
+    def getScan(self,msg):
+        #print(msg.ranges)   # 激光扫描角度范围为(-π,π)rad，即(-180°,180°)
+        self.angle_min = -3.14159274101
+        self.angle_max = 3.14159274101
+        self.angle_increment = 0.0174532923847
+        #self.scan_filter =[]
+        scan_dict = {}          # 缓存障碍物角度与距离关系字典
+        self.scan_sorted = {}   # 按距离排序后的关系字典
+        length = len(np.arange(self.angle_min,self.angle_max,self.angle_increment))-1
+        #print(length)
+        for i in range(0,length):
+            try:
+                angle = i - 180     # 换算成对应角度值
+                if -40 <= angle <= 40:   # 取前向激光扫描角度
+                    if msg.ranges[i] >= self.scan_front_filter:
+                        scan_dict[angle] = msg.ranges[i]
+
+                else:                      # 取侧向激光扫描角度
+                    if msg.ranges[i] >= self.scan_edge_filter:
+                        scan_dict[angle] = msg.ranges[i]
+
+            except Exception as e:
+                continue
+
+        self.scan_sorted = dict(sorted(scan_dict.items(),key=lambda x: x[1]))
+        angle = list(self.scan_sorted.keys())[0]
+        min_distance = self.scan_sorted[angle]
+        #print("障碍物角度%s,距离%s" %(angle,min_distance))
+        if min_distance <= self.lidar_detect_distance:
+            self.update_status(angle,min_distance)
+
+
+    def update_status(self,angle,distance):
+        cmd_pub = rospy.Publisher('cmd_vel', Twist, queue_size=10)
+        twist = Twist()
+        twist.linear.x = 0
+        twist.linear.y = 0
+        twist.linear.z = 0
+        twist.angular.x = 0
+        twist.angular.y = 0
+        twist.angular.z = 0
+        cmd_pub.publish(twist)
+        rospy.loginfo("障碍物角度值{}°,距离值{}m".format(angle,distance))
+
+
+if __name__ == '__main__':
+
+    rospy.init_node('stop_car')
+    try:
+        Obstacle()
+
+    except Exception as e:
+        pass
+

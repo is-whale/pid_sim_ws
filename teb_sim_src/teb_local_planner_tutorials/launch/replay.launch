@@ -1,0 +1,11 @@
+<launch>
+
+<node name="rviz" pkg="rviz" type="rviz" args="-d $(find bringup)/rviz/racecar_urdf.rviz" output="log"/>
+
+<node name="rosbag" pkg="rosbag" type="play" args="/home/dayang/Real_trajectory_RL/ywh/bag/Scenarios_6_2023-04-28-00-12-29.bag"/>
+
+<include file="$(find jackal_description)/launch/description.launch">
+    <arg name="config" value="front_laser" />
+  </include>
+
+</launch>
