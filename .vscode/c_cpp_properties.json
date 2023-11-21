@@ -9,7 +9,8 @@
                 "/opt/ros/melodic/include/**",
                 "/usr/include/**",
                 "${workspaceFolder}/include",
-                "${workspaceFolder}/Navigation/path_tracking/include"
+                "${workspaceFolder}/Navigation/path_tracking/include",
+                "${workspaceFolder}/Ackermann-chassis-PID-control/include"
             ],
             "name": "ROS",
             "intelliSenseMode": "gcc-x64",
