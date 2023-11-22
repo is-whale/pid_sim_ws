@@ -18,7 +18,7 @@ public:
     /// @param[in] pathTopic topic name where desired path is provided.
     PathTracker(std::string throttleTopic, std::string brakeTopic,
                 std::string steeringTopic, std::string odomTopic,
-                std::string pathTopic);
+                std::string pathTopic, std::string cmd_vel);
 
     /// @brief copy constructor deleted.
     PathTracker(const PathTracker&) = delete;
@@ -34,6 +34,9 @@ protected:
 
     /// @brief publisher to steering topic.
     ros::Publisher steeringPub;
+
+    /// @brief publisher to cmd_vel topic
+    ros::Publisher cmdvelPub;
 
     /// @brief subscriber to odometry topic.
     ros::Subscriber odomSub;

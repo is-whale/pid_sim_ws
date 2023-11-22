@@ -15,13 +15,16 @@
 
 PathTracker::PathTracker(std::string throttleTopic, std::string brakeTopic,
                         std::string steeringTopic, std::string odomTopic,
-                        std::string pathTopic)
+                        std::string pathTopic,std::string cmdTopic)
 {
     ros::NodeHandle nh;
     constexpr int queueSize = 10;
     throttlePub = nh.advertise<std_msgs::Float64>(throttleTopic, queueSize);
     brakePub = nh.advertise<std_msgs::Float64>(brakeTopic, queueSize);
     steeringPub = nh.advertise<std_msgs::Float64>(steeringTopic, queueSize);
+    //add cmd pub
+    cmdvelPub = nh.advertise<geometry_msgs::Twist>(cmdTopic,queueSize);
+    //add cmd pub end
     odomSub = nh.subscribe(odomTopic, queueSize, &PathTracker::callbackOdom, this);
     pathSub = nh.subscribe(pathTopic, queueSize, &PathTracker::callbackPath, this);
 
@@ -43,7 +46,9 @@ Stanley::Stanley(ros::NodeHandle* pn) :
                 pn->param<std::string>("brakeTopic", "brake_cmd"),
                 pn->param<std::string>("steeringTopic", "steering_cmd"),
                 pn->param<std::string>("odomTopic", "odom"),
-                pn->param<std::string>("pathTopic", "path")}
+                pn->param<std::string>("pathTopic", "path"),
+                pn->param<std::string>("cmdTopic","cmd_vel")
+                }
 {
     ROS_INFO("Stanley class initialized");
 }
@@ -65,10 +70,18 @@ void Stanley::callbackOdom(const nav_msgs::Odometry::ConstPtr& msg){
     double steeringAngle = headingError + atan(Kp*cte / (1 + vel));
     LOG_INFO("Steering angle: " << steeringAngle*180/M_PI << "[deg], closest: " << closest << ", cte: " << cte << ", vel: " << vel);
     std_msgs::Float64 temp;
+    //add for cmdvel
+    geometry_msgs::Twist cmdvel_for_pub;
     temp.data = AUDIBOT_STEERING_RATIO * steeringAngle;
+    cmdvel_for_pub.angular.z = temp.data;
+    cmdvel_for_pub.linear.x = 0.2;
+    cmdvelPub.publish(cmdvel_for_pub);
+
     steeringPub.publish(temp);
     temp.data = 0.20;
     throttlePub.publish(temp);
+
+
 }
 
 double Stanley::yawError(const geometry_msgs::Quaternion& quat, unsigned int closest){
