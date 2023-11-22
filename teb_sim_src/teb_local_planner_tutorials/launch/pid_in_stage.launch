@@ -42,7 +42,9 @@
 
 		<param name="clearing_rotation_allowed" value="false" />
 		<!-- Our carlike robot is not able to rotate in place -->
+
 		<!-- <remap from="cmd_vel" to="/cmd_vel/move_base" /> -->
+		<!-- <remap from="/move_base/TebLocalPlannerROS/local_plan" to="/path"/> -->
 	</node>
 
 	<!-- ackermann pid  -->
@@ -68,6 +70,10 @@
 		<param name="initial_pose_y" value="2" />
 		<param name="initial_pose_a" value="0" />
 	</node>
+
+	<!-- path tracking -->
+	<include file="$(find path_tracking)/launch/stanley.launch" >
+    </include>
 
 	<!--  **************** Visualisation ****************  -->
 	<node name="rviz" pkg="rviz" type="rviz"
